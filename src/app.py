@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Characters, FavCharacters, 
 #from models import Person
 
 app = Flask(__name__)
@@ -38,12 +38,51 @@ def sitemap():
 
 @app.route('/user', methods=['GET'])
 def handle_hello():
+    users = User.query.all()
+    all_users = list(map(lambda x: x.serialize(), users))
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+    return jsonify(all_users), 200
 
-    return jsonify(response_body), 200
+
+
+@app.route('/user', methods=['POST'])
+def create_user():
+    request_body_user = request.get_json()
+    new_user = User(email=request_body_user["email"], password=request_body_user["pasword"], is_active=request_body_user["is_active"])
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({"msg": "usuario agregado con exito", "user": new_user.serialize()})
+
+
+@app.route('/character', methods=['GET'])
+def get_character():
+    characters = Characters.query.all()
+    all_characters = list(map(lambda x: x.serialize(), characters))
+
+    return jsonify(all_characters), 200
+
+
+
+
+
+
+@app.route('/favoritos', methods=['GET'])
+def get_favoritos():
+    favorite_character = FavCharacters.query.all()
+    all_favorite_characters = list(map(lambda x: x.serialize(), favorite_character))
+
+    return jsonify({"characters" : all_favorite_characters})
+
+
+@app.route('/favoritos/character', methods=['POST'])
+def add_favorite_character():
+    request_body_favorite_character = request.get_json()
+    new_favorite_character = FavCharacters(user_id=request_body_favorite_character["user_id"], character_id=request_body_favorite_character["character_id"])
+    db.session.add
+    db.session.commit()
+
+    return jsonify({"msg": "personaje agregado a los favoritos"})
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
